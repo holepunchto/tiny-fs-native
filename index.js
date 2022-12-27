@@ -449,7 +449,7 @@ function unlink (path, cb) {
 
 function readFile (path, opts, cb) {
   if (typeof opts === 'function') return readFile(path, null, opts)
-  if (!cb) throw typeError('ERR_INVALID_CALLBACK', 'Callback must be a function')
+  if (typeof cb !== 'function') throw typeError('ERR_INVALID_CALLBACK', 'Callback must be a function')
   if (typeof opts === 'string') opts = { encoding: opts }
   if (!opts) opts = {}
 
@@ -519,7 +519,7 @@ function readFileSync (path, opts) {
 
 function writeFile (path, buf, opts, cb) {
   if (typeof opts === 'function') return writeFile(path, buf, null, opts)
-  if (!cb) throw typeError('ERR_INVALID_CALLBACK', 'Callback must be a function')
+  if (typeof cb !== 'function') throw typeError('ERR_INVALID_CALLBACK', 'Callback must be a function')
   if (typeof opts === 'string') opts = { encoding: opts }
   if (!opts) opts = {}
 

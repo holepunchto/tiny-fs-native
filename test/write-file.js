@@ -16,7 +16,7 @@ test('write file', function (t) {
     t.alike(fsnode.readFileSync(filename), b4a.from('ISC'))
   })
 
-  t.absent(fsnode.existsSync(filename))
+  t.absent(fsnode.existsSync(filename)) // + if this test is run in solo, this sometimes exists but only 1 every ~15 times?
 
   setImmediate(() => {
     t.alike(fsnode.readFileSync(filename), b4a.from('ISC'))
@@ -40,7 +40,7 @@ test('write file with encoding', function (t) {
 })
 
 test('write file that already exists', function (t) {
-  t.plan(3)
+  t.plan(2)
 
   const root = createFolder(t)
 
@@ -115,7 +115,7 @@ test('write file with flags', function (t) {
   })
 })
 
-test.solo('write file with no callback', function (t) {
+test('write file with no callback', function (t) {
   t.plan(8)
 
   const root = createFolder(t)

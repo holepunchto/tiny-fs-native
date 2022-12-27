@@ -363,11 +363,32 @@ NAPI_METHOD(tiny_fs_unlink) {
   return NULL;
 }
 
+NAPI_METHOD(tiny_fs_get_error) {
+  NAPI_ARGV(1)
+  NAPI_ARGV_INT32(err, 0)
+
+  napi_value arr;
+
+  napi_create_array(env, &arr);
+
+  napi_value name;
+  napi_create_string_utf8(env, uv_err_name(err), NAPI_AUTO_LENGTH, &name);
+  napi_set_element(env, arr, 0, name);
+
+  napi_value desc;
+  napi_create_string_utf8(env, uv_strerror(err), NAPI_AUTO_LENGTH, &desc);
+  napi_set_element(env, arr, 1, desc);
+
+  return arr;
+}
+
 NAPI_INIT() {
   NAPI_EXPORT_SIZEOF(tiny_fs_t)
   NAPI_EXPORT_OFFSETOF(tiny_fs_t, id)
 
   NAPI_EXPORT_FUNCTION(tiny_fs_init)
+  NAPI_EXPORT_FUNCTION(tiny_fs_get_error)
+
   NAPI_EXPORT_FUNCTION(tiny_fs_open)
   NAPI_EXPORT_FUNCTION(tiny_fs_ftruncate)
   NAPI_EXPORT_FUNCTION(tiny_fs_open)

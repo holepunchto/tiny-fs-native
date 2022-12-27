@@ -3,6 +3,7 @@ const { Readable, Writable } = require('streamx')
 const b4a = require('b4a')
 
 const LE = (new Uint8Array(new Uint16Array([255]).buffer))[0] === 0xff
+const ERRORS = new Map()
 
 const sep = exports.sep = binding.IS_WINDOWS ? '\\' : '/'
 
@@ -112,16 +113,18 @@ function onfsresponse (id, result) {
 }
 
 function createError (code) {
-  if (code === binding.UV_ENOENT) {
-    const err = new Error('ENOENT: no such file or directory')
-    err.errno = code
-    err.code = 'ENOENT'
-    return err
+  let e = ERRORS.get(code)
+
+  if (e === undefined) {
+    e = binding.tiny_fs_get_error(code)
+    ERRORS.set(code, e)
   }
 
-  const err = new Error('Filesystem operation failed: ' + code)
+  const err = new Error(e[0] + ': ' + e[1])
+
   err.errno = code
-  err.code = 'EUNKNOWN'
+  err.code = e[0]
+
   return err
 }
 

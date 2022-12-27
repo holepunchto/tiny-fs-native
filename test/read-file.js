@@ -60,6 +60,7 @@ test.skip('read file with non-existing encoding', function (t) {
   const root = createFolder(t)
 
   fs.readFile(path.join(root, 'LICENSE'), { encoding: 'not-exists' }, function (err, data) {
+    // + it's not reaching the callback
     t.is(err.code, 'ERR_UNKNOWN_ENCODING')
     t.is(data, undefined)
   })

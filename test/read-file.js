@@ -25,9 +25,9 @@ test('read file with encoding', function (t) {
     t.is(data, 'MIT')
   })
 
-  fs.readFile(path.join(root, 'LICENSE'), 'utf8', function (err, data) {
+  fs.readFile(path.join(root, 'LICENSE'), 'hex', function (err, data) {
     t.is(err, null)
-    t.is(data, 'MIT')
+    t.is(data, b4a.from('MIT').toString('hex'))
   })
 })
 

@@ -20,7 +20,9 @@ fs.open
 fs.close
 fs.unlink
 fs.read
+fs.readv
 fs.write
+fs.writev
 fs.ftruncate
 fs.stat
 fs.fstat
@@ -36,6 +38,9 @@ fs.promises.mkdir
 fs.promises.rmdir
 fs.promises.stat
 fs.promises.unlink
+
+fs.createReadStream
+fs.createWriteStream
 ```
 
 ## License

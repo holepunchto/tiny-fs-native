@@ -1,4 +1,5 @@
 const binding = require('./binding')
+const { Readable, Writable } = require('streamx')
 const b4a = require('b4a')
 
 const LE = (new Uint8Array(new Uint16Array([255]).buffer))[0] === 0xff
@@ -51,6 +52,7 @@ function alloc () {
     view,
     type: 0,
     buffer: null,
+    buffers: null,
     callback: null
   }
 
@@ -75,14 +77,16 @@ function onfsresponse (id, result) {
 
   const callback = req.callback
   const buffer = req.buffer
+  const buffers = req.buffers
 
   req.callback = null
   req.buffer = null
+  req.buffers = null
 
   if (result < 0) {
     callback(createError(result), result, null)
   } else {
-    callback(null, result, buffer)
+    callback(null, result, buffer || buffers)
   }
 }
 
@@ -119,6 +123,40 @@ function write (fd, buf, offset, len, pos, cb) {
   if (typeof pos === 'function') return write(fd, buf, offset, len, null, pos)
 
   throw new Error('Callback required')
+}
+
+function readv (fd, buffers, pos, cb) {
+  if (typeof pos === 'function') {
+    cb = pos
+    pos = null
+  }
+
+  const req = getReq()
+
+  req.buffers = buffers
+  req.callback = cb
+
+  const low = pos === null ? 0xffffffff : ((pos & 0xffffffff) >>> 0)
+  const high = pos === null ? 0xffffffff : (pos - low) / 0x100000000
+
+  binding.tiny_fs_readv(req.handle, fd, buffers, low, high)
+}
+
+function writev (fd, buffers, pos, cb) {
+  if (typeof pos === 'function') {
+    cb = pos
+    pos = null
+  }
+
+  const req = getReq()
+
+  req.buffers = buffers
+  req.callback = cb
+
+  const low = pos === null ? 0xffffffff : ((pos & 0xffffffff) >>> 0)
+  const high = pos === null ? 0xffffffff : (pos - low) / 0x100000000
+
+  binding.tiny_fs_writev(req.handle, fd, buffers, low, high)
 }
 
 function read (fd, buf, offset, len, pos, cb) {
@@ -404,12 +442,117 @@ function writeFile (path, buf, opts, cb) {
   })
 }
 
+class FileWriteStream extends Writable {
+  constructor (path, opts = {}) {
+    super({ map })
+
+    this.path = path
+    this.fd = 0
+    this.flags = opts.flags || 'w'
+    this.mode = opts.mode || 0o666
+  }
+
+  _open (cb) {
+    open(this.path, this.flags, this.mode, (err, fd) => {
+      if (err) return cb(err)
+      this.fd = fd
+      cb(null)
+    })
+  }
+
+  _writev (datas, cb) {
+    writev(this.fd, datas, cb)
+  }
+
+  _destroy (cb) {
+    if (!this.fd) return cb(null)
+    close(this.fd, () => cb(null))
+  }
+}
+
+class FileReadStream extends Readable {
+  constructor (path, opts = {}) {
+    super()
+
+    this.path = path
+    this.fd = 0
+
+    this._offset = opts.start || 0
+    this._missing = 0
+
+    if (opts.length) this._missing = opts.length
+    else if (typeof opts.end === 'number') this._missing = opts.end - this._offset + 1
+    else this._missing = -1
+  }
+
+  _open (cb) {
+    open(this.path, constants.O_RDONLY, (err, fd) => {
+      if (err) return cb(err)
+
+      const onerror = (err) => close(fd, () => cb(err))
+
+      fstat(fd, (err, st) => {
+        if (err) return onerror(err)
+        if (!st.isFile()) return onerror(new Error(this.path + ' is not a file'))
+
+        this.fd = fd
+        if (this._missing === -1) this._missing = st.size
+
+        if (st.size < this._offset) {
+          this._offset = st.size
+          this._missing = 0
+          return cb(null)
+        }
+        if (st.size < this._offset + this._missing) {
+          this._missing = st.size - this._offset
+          return cb(null)
+        }
+
+        cb(null)
+      })
+    })
+  }
+
+  _read (cb) {
+    if (!this._missing) {
+      this.push(null)
+      return cb(null)
+    }
+
+    const data = b4a.allocUnsafe(Math.min(this._missing, 65536))
+
+    read(this.fd, data, 0, data.byteLength, this._offset, (err, read) => {
+      if (err) return cb(err)
+
+      if (!read) {
+        this.push(null)
+        return cb(null)
+      }
+
+      if (this._missing < read) read = this._missing
+      this.push(data.subarray(0, read))
+      this._missing -= read
+      this._offset += read
+      if (!this._missing) this.push(null)
+
+      cb(null)
+    })
+  }
+
+  _destroy (cb) {
+    if (!this.fd) return cb(null)
+    close(this.fd, () => cb(null))
+  }
+}
+
 exports.promises = {}
 
 exports.open = open
 exports.close = close
 exports.read = read
+exports.readv = readv
 exports.write = write
+exports.writev = writev
 exports.ftruncate = ftruncate
 exports.fstat = fstat
 
@@ -436,6 +579,12 @@ exports.promises.stat = promisify(stat)
 exports.lstat = lstat
 exports.promises.lstat = promisify(lstat)
 
+exports.ReadStream = FileReadStream
+exports.createReadStream = (path, options) => new FileReadStream(path, options)
+
+exports.WriteStream = FileWriteStream
+exports.createWriteStream = (path, options) => new FileWriteStream(path, options)
+
 exports._onfsresponse = onfsresponse // just for trible ensurance gc...
 
 function promisify (fn) {
@@ -447,4 +596,8 @@ function promisify (fn) {
       })
     })
   }
+}
+
+function map (s) {
+  return typeof s === 'string' ? b4a.from(s) : s
 }

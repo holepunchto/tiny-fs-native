@@ -1,6 +1,7 @@
 #include <napi-macros.h>
 #include <node_api.h>
 #include <uv.h>
+#include <stdlib.h>
 
 static napi_ref on_open;
 
@@ -123,6 +124,42 @@ NAPI_METHOD(tiny_fs_write) {
   return NULL;
 }
 
+NAPI_METHOD(tiny_fs_writev) {
+  NAPI_ARGV(5)
+
+  NAPI_ARGV_BUFFER_CAST(tiny_fs_t *, req, 0)
+  NAPI_ARGV_UINT32(fd, 1)
+
+  napi_value arr = argv[2];
+  napi_value item;
+
+  NAPI_ARGV_UINT32(pos_low, 3)
+  NAPI_ARGV_UINT32(pos_high, 4)
+
+  uv_loop_t *loop;
+  napi_get_uv_event_loop(env, &loop);
+
+  req->env = env;
+
+  uint32_t nbufs;
+  napi_get_array_length(env, arr, &nbufs);
+
+  uv_buf_t *bufs = malloc(sizeof(uv_buf_t) * nbufs);
+
+  for (uint32_t i = 0; i < nbufs; i++) {
+    napi_get_element(env, arr, i, &item);
+    uv_buf_t *buf = &(bufs[i]);
+    napi_get_buffer_info(env, item, (void **) &(buf->base), &(buf->len));
+  }
+
+  int64_t pos = ((int64_t) pos_high) * 0x100000000 + ((int64_t) pos_low);
+
+  uv_fs_write(loop, (uv_fs_t *) req, fd, bufs, nbufs, pos, on_fs_response);
+  free(bufs);
+
+  return NULL;
+}
+
 NAPI_METHOD(tiny_fs_read) {
   NAPI_ARGV(7)
 
@@ -147,6 +184,42 @@ NAPI_METHOD(tiny_fs_read) {
   };
 
   uv_fs_read(loop, (uv_fs_t *) req, fd, &buf, 1, pos, on_fs_response);
+
+  return NULL;
+}
+
+NAPI_METHOD(tiny_fs_readv) {
+  NAPI_ARGV(5)
+
+  NAPI_ARGV_BUFFER_CAST(tiny_fs_t *, req, 0)
+  NAPI_ARGV_UINT32(fd, 1)
+
+  napi_value arr = argv[2];
+  napi_value item;
+
+  NAPI_ARGV_UINT32(pos_low, 3)
+  NAPI_ARGV_UINT32(pos_high, 4)
+
+  uv_loop_t *loop;
+  napi_get_uv_event_loop(env, &loop);
+
+  req->env = env;
+
+  uint32_t nbufs;
+  napi_get_array_length(env, arr, &nbufs);
+
+  uv_buf_t *bufs = malloc(sizeof(uv_buf_t) * nbufs);
+
+  for (uint32_t i = 0; i < nbufs; i++) {
+    napi_get_element(env, arr, i, &item);
+    uv_buf_t *buf = &(bufs[i]);
+    napi_get_buffer_info(env, item, (void **) &(buf->base), &(buf->len));
+  }
+
+  int64_t pos = ((int64_t) pos_high) * 0x100000000 + ((int64_t) pos_low);
+
+  uv_fs_read(loop, (uv_fs_t *) req, fd, bufs, nbufs, pos, on_fs_response);
+  free(bufs);
 
   return NULL;
 }
@@ -299,7 +372,9 @@ NAPI_INIT() {
   NAPI_EXPORT_FUNCTION(tiny_fs_ftruncate)
   NAPI_EXPORT_FUNCTION(tiny_fs_open)
   NAPI_EXPORT_FUNCTION(tiny_fs_read)
+  NAPI_EXPORT_FUNCTION(tiny_fs_readv)
   NAPI_EXPORT_FUNCTION(tiny_fs_write)
+  NAPI_EXPORT_FUNCTION(tiny_fs_writev)
   NAPI_EXPORT_FUNCTION(tiny_fs_close)
   NAPI_EXPORT_FUNCTION(tiny_fs_mkdir)
   NAPI_EXPORT_FUNCTION(tiny_fs_rmdir)

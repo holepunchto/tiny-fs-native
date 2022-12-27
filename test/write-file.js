@@ -19,7 +19,7 @@ test('write file', function (t) {
   t.absent(fsnode.existsSync(filename))
 
   setImmediate(() => {
-    t.alike( fsnode.readFileSync(filename), b4a.from('ISC'))
+    t.alike(fsnode.readFileSync(filename), b4a.from('ISC'))
   })
 })
 

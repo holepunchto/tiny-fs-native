@@ -1,6 +1,6 @@
 const test = require('brittle')
 const path = require('path')
-const fsnode = require('fs')
+// const fsnode = require('fs')
 const { createFolder } = require('./helpers')
 const fs = require('../index.js')
 const b4a = require('b4a')

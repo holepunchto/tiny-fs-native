@@ -3,7 +3,7 @@ const { Readable, Writable } = require('streamx')
 const b4a = require('b4a')
 
 const LE = (new Uint8Array(new Uint16Array([255]).buffer))[0] === 0xff
-const ERRORS = new Map()
+const ERRORS = new Map(binding.uv_error_map)
 
 const sep = exports.sep = binding.IS_WINDOWS ? '\\' : '/'
 
@@ -112,18 +112,12 @@ function onfsresponse (id, result) {
   }
 }
 
-function createError (code) {
-  let e = ERRORS.get(code)
+function createError (errno) {
+  const [code, desc] = ERRORS.get(errno)
+  const err = new Error(code + ': ' + desc)
 
-  if (e === undefined) {
-    e = binding.tiny_fs_get_error(code)
-    ERRORS.set(code, e)
-  }
-
-  const err = new Error(e[0] + ': ' + e[1])
-
-  err.errno = code
-  err.code = e[0]
+  err.errno = errno
+  err.code = code
 
   return err
 }

@@ -6,19 +6,15 @@ const fs = require('../index.js')
 const b4a = require('b4a')
 
 test('write file', function (t) {
-  t.plan(4)
+  t.plan(3)
 
   const root = createFolder(t)
   const filename = path.join(root, 'NEW-LICENSE')
 
+  t.absent(fsnode.existsSync(filename))
+
   fs.writeFile(filename, b4a.from('ISC'), function (err) {
     t.is(err, null)
-    t.alike(fsnode.readFileSync(filename), b4a.from('ISC'))
-  })
-
-  t.absent(fsnode.existsSync(filename)) // + if this test is run in solo, this sometimes exists but only 1 every ~15 times?
-
-  setImmediate(() => {
     t.alike(fsnode.readFileSync(filename), b4a.from('ISC'))
   })
 })

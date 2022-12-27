@@ -404,22 +404,47 @@ function writeFile (path, buf, opts, cb) {
   })
 }
 
+exports.promises = {}
+
 exports.open = open
 exports.close = close
-exports.unlink = unlink
 exports.read = read
-exports.readFile = readFile
 exports.write = write
-exports.writeFile = writeFile
-exports.mkdir = mkdir
-exports.rmdir = rmdir
-exports.Stats = Stats // for compat
-exports.stat = stat
-exports.fstat = fstat
-exports.lstat = lstat
 exports.ftruncate = ftruncate
+exports.fstat = fstat
+
+exports.unlink = unlink
+exports.promises.unlink = promisify(unlink)
+
+exports.readFile = readFile
+exports.promises.readFile = promisify(readFile)
+
+exports.writeFile = writeFile
+exports.promises.writeFile = promisify(writeFile)
+
+exports.mkdir = mkdir
+exports.promises.mkdir = promisify(mkdir)
+
+exports.rmdir = rmdir
+exports.promises.rmdir = promisify(rmdir)
+
+exports.Stats = Stats // for compat
+
+exports.stat = stat
+exports.promises.stat = promisify(stat)
+
+exports.lstat = lstat
+exports.promises.lstat = promisify(lstat)
 
 exports._onfsresponse = onfsresponse // just for trible ensurance gc...
 
-// readFile(__filename, 'utf-8', console.log)
-writeFile('foo.txt', 'hello\n', console.log)
+function promisify (fn) {
+  return function (...args) {
+    return new Promise((resolve, reject) => {
+      fn(...args, function (err, res) {
+        if (err) return reject(err)
+        resolve(res)
+      })
+    })
+  }
+}

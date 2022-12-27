@@ -29,6 +29,13 @@ fs.mkdir
 fs.rmdir
 fs.writeFile
 fs.readFile
+
+fs.promises.readFile
+fs.promises.writeFile
+fs.promises.mkdir
+fs.promises.rmdir
+fs.promises.stat
+fs.promises.unlink
 ```
 
 ## License

@@ -1,0 +1,27 @@
+{
+  "name": "tiny-fs-native",
+  "version": "0.0.0",
+  "description": "Native fs for Javascript",
+  "main": "index.js",
+  "dependencies": {
+    "napi-macros": "^2.1.1",
+    "node-gyp-build": "^4.5.0"
+  },
+  "devDependencies": {
+    "standard": "^17.0.0"
+  },
+  "scripts": {
+    "test": "standard"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/holepunchto/tiny-fs-native.git"
+  },
+  "author": "Mathias Buus (@mafintosh)",
+  "license": "MIT",
+  "gypfile": true,
+  "bugs": {
+    "url": "https://github.com/holepunchto/tiny-fs-native/issues"
+  },
+  "homepage": "https://github.com/holepunchto/tiny-fs-native"
+}

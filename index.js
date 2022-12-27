@@ -16,10 +16,10 @@ const constants = exports.constants = {
   S_IFREG: binding.S_IFREG,
   S_IFDIR: binding.S_IFDIR,
   S_IFCHR: binding.S_IFCHR,
-  S_IFBLK: binding.S_IFBLK,
-  S_IFIFO: binding.S_IFIFO,
   S_IFLNK: binding.S_IFLNK,
-  S_IFSOCK: binding.S_IFSOCK
+  S_IFBLK: binding.S_IFBLK || 0,
+  S_IFIFO: binding.S_IFIFO || 0,
+  S_IFSOCK: binding.S_IFSOCK || 0
 }
 
 const reqs = []

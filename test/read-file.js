@@ -91,3 +91,37 @@ test('read file with flags', function (t) {
     t.alike(data, b4a.from('')) // empty means that w+ flags had effect
   })
 })
+
+test('read file with no callback', function (t) {
+  t.plan(8)
+
+  const root = createFolder(t)
+
+  try {
+    fs.readFile()
+  } catch (error) {
+    t.ok(error.message.startsWith('Callback must be a function'))
+    t.is(error.code, 'ERR_INVALID_CALLBACK')
+  }
+
+  try {
+    fs.readFile(function () {})
+  } catch (error) {
+    t.ok(error.message.startsWith('Callback must be a function'))
+    t.is(error.code, 'ERR_INVALID_CALLBACK')
+  }
+
+  try {
+    fs.readFile(path.join(root, 'LICENSE'))
+  } catch (error) {
+    t.ok(error.message.startsWith('Callback must be a function'))
+    t.is(error.code, 'ERR_INVALID_CALLBACK')
+  }
+
+  try {
+    fs.readFile(path.join(root, 'LICENSE'), { flag: 'w+' })
+  } catch (error) {
+    t.ok(error.message.startsWith('Callback must be a function'))
+    t.is(error.code, 'ERR_INVALID_CALLBACK')
+  }
+})

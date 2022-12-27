@@ -90,20 +90,3 @@ test('read file with flags', function (t) {
     t.alike(data, b4a.from('')) // empty means that w+ flags had effect
   })
 })
-
-/*
-exports.open = open
-exports.close = close
-exports.unlink = unlink
-exports.read = read
-exports.readFile = readFile
-exports.write = write
-exports.writeFile = writeFile
-exports.mkdir = mkdir
-exports.rmdir = rmdir
-exports.Stats = Stats // for compat
-exports.stat = stat
-exports.fstat = fstat
-exports.lstat = lstat
-exports.ftruncate = ftruncate
-*/

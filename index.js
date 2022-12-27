@@ -28,17 +28,38 @@ let used = 0
 
 binding.tiny_fs_init(onfsresponse)
 
-function flagsToMode (flags) {
+// Lightly-modified from the Node FS internal utils.
+function flagsToNumber (flags) {
   switch (flags) {
-    case 'a': return constants.O_APPEND
-    case 'a+': return constants.O_APPEND | constants.O_RDWR
-    case 'w': return constants.O_WRONLY | constants.O_TRUNC | constants.O_CREAT
-    case 'w+': return constants.O_RDWR | constants.O_TRUNC | constants.O_CREAT
-    case 'r': return constants.O_RDONLY
-    case 'r+': return constants.O_RDWR
+    case 'r' : return constants.O_RDONLY
+    case 'rs' : // Fall through.
+    case 'sr' : return constants.O_RDONLY | constants.O_SYNC
+    case 'r+' : return constants.O_RDWR
+    case 'rs+' : // Fall through.
+    case 'sr+' : return constants.O_RDWR | constants.O_SYNC
+
+    case 'w' : return constants.O_TRUNC | constants.O_CREAT | constants.O_WRONLY
+    case 'wx' : // Fall through.
+    case 'xw' : return constants.O_TRUNC | constants.O_CREAT | constants.O_WRONLY | constants.O_EXCL
+
+    case 'w+' : return constants.O_TRUNC | constants.O_CREAT | constants.O_RDWR
+    case 'wx+': // Fall through.
+    case 'xw+': return constants.O_TRUNC | constants.O_CREAT | constants.O_RDWR | constants.O_EXCL
+
+    case 'a' : return constants.O_APPEND | constants.O_CREAT | constants.O_WRONLY
+    case 'ax' : // Fall through.
+    case 'xa' : return constants.O_APPEND | constants.O_CREAT | constants.O_WRONLY | constants.O_EXCL
+    case 'as' : // Fall through.
+    case 'sa' : return constants.O_APPEND | constants.O_CREAT | constants.O_WRONLY | constants.O_SYNC
+
+    case 'a+' : return constants.O_APPEND | constants.O_CREAT | constants.O_RDWR
+    case 'ax+': // Fall through.
+    case 'xa+': return constants.O_APPEND | constants.O_CREAT | constants.O_RDWR | constants.O_EXCL
+    case 'as+': // Fall through.
+    case 'sa+': return constants.O_APPEND | constants.O_CREAT | constants.O_RDWR | constants.O_SYNC
   }
 
-  throw new Error('Unknown flags: ' + flags)
+  throw new Error(`Invalid value in flags: ${flags}`)
 }
 
 function alloc () {
@@ -187,7 +208,7 @@ function open (filename, flags, mode, cb) {
   }
 
   if (typeof flags === 'string') {
-    flags = flagsToMode(flags)
+    flags = flagsToNumber(flags)
   }
 
   const req = getReq()

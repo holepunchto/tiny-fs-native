@@ -1,5 +1,6 @@
 const test = require('brittle')
 const path = require('path')
+const fsnode = require('fs')
 const { createFolder } = require('./helpers')
 const fs = require('../index.js')
 const b4a = require('b4a')
@@ -55,15 +56,18 @@ test('read file with encoding option', function (t) {
 })
 
 test.skip('read file with non-existing encoding', function (t) {
-  t.plan(2)
+  t.plan(1)
 
   const root = createFolder(t)
 
-  fs.readFile(path.join(root, 'LICENSE'), { encoding: 'not-exists' }, function (err, data) {
-    // + it's not reaching the callback
-    t.is(err.code, 'ERR_UNKNOWN_ENCODING')
-    t.is(data, undefined)
-  })
+  try {
+    // + it's not throwing on same tick, but failing before cb with ERR_UNKNOWN_ENCODING
+    fs.readFile(path.join(root, 'LICENSE'), { encoding: 'not-exists' }, function () {
+      t.fail('it should not reach callback')
+    })
+  } catch (error) {
+    t.is(error.code, 'ERR_UNKNOWN_ENCODING') // + it should be "ERR_INVALID_ARG_VALUE"
+  }
 })
 
 test('read file but it is a folder', function (t) {

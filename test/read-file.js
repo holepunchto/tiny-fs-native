@@ -5,28 +5,28 @@ const fs = require('../index.js')
 const b4a = require('b4a')
 
 test('read file', function (t) {
-  t.plan(1)
+  t.plan(2)
 
   const root = createFolder(t)
 
   fs.readFile(path.join(root, 'LICENSE'), function (err, data) {
-    if (err) throw err
+    t.is(err, null)
     t.alike(data, b4a.from('MIT'))
   })
 })
 
 test('read file with encoding', function (t) {
-  t.plan(2)
+  t.plan(4)
 
   const root = createFolder(t)
 
   fs.readFile(path.join(root, 'LICENSE'), 'utf-8', function (err, data) {
-    if (err) throw err
+    t.is(err, null)
     t.is(data, 'MIT')
   })
 
   fs.readFile(path.join(root, 'LICENSE'), 'utf8', function (err, data) {
-    if (err) throw err
+    t.is(err, null)
     t.is(data, 'MIT')
   })
 })
@@ -44,12 +44,12 @@ test('read non-existing file', function (t) {
 })
 
 test('read file with encoding option', function (t) {
-  t.plan(1)
+  t.plan(2)
 
   const root = createFolder(t)
 
   fs.readFile(path.join(root, 'LICENSE'), { encoding: 'utf-8' }, function (err, data) {
-    if (err) throw err
+    t.is(err, null)
     t.is(data, 'MIT')
   })
 })
@@ -82,12 +82,12 @@ test('read file but it is a folder', function (t) {
 })
 
 test('read file with flags', function (t) {
-  t.plan(1)
+  t.plan(2)
 
   const root = createFolder(t)
 
   fs.readFile(path.join(root, 'LICENSE'), { flag: 'w+' }, function (err, data) {
-    if (err) throw err
+    t.is(err, null)
     t.alike(data, b4a.from('')) // empty means that w+ flags had effect
   })
 })

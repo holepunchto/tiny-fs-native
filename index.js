@@ -353,6 +353,13 @@ function mkdirp (path, mode, cb) {
   })
 }
 
+function rename (src, dst, cb) {
+  const req = getReq()
+
+  req.callback = cb
+  binding.tiny_fs_rename(req.handle, src, dst)
+}
+
 function mkdir (path, opts, cb) {
   if (typeof opts === 'function') {
     cb = opts
@@ -582,6 +589,9 @@ exports.promises.readFile = promisify(readFile)
 
 exports.writeFile = writeFile
 exports.promises.writeFile = promisify(writeFile)
+
+exports.rename = rename
+exports.promises.rename = promisify(rename)
 
 exports.mkdir = mkdir
 exports.promises.mkdir = promisify(mkdir)

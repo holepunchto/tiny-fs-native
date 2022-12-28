@@ -281,6 +281,23 @@ NAPI_METHOD(tiny_fs_close) {
   return NULL;
 }
 
+NAPI_METHOD(tiny_fs_rename) {
+  NAPI_ARGV(3)
+
+  NAPI_ARGV_BUFFER_CAST(tiny_fs_t *, req, 0)
+  NAPI_ARGV_UTF8(src, 4096, 1)
+  NAPI_ARGV_UTF8(dst, 4096, 2)
+
+  uv_loop_t *loop;
+  napi_get_uv_event_loop(env, &loop);
+
+  req->env = env;
+
+  uv_fs_rename(loop, (uv_fs_t *) req, src, dst, on_fs_response);
+
+  return NULL;
+}
+
 NAPI_METHOD(tiny_fs_mkdir) {
   NAPI_ARGV(3)
 
@@ -398,6 +415,7 @@ NAPI_INIT() {
   NAPI_EXPORT_FUNCTION(tiny_fs_write)
   NAPI_EXPORT_FUNCTION(tiny_fs_writev)
   NAPI_EXPORT_FUNCTION(tiny_fs_close)
+  NAPI_EXPORT_FUNCTION(tiny_fs_rename)
   NAPI_EXPORT_FUNCTION(tiny_fs_mkdir)
   NAPI_EXPORT_FUNCTION(tiny_fs_rmdir)
   NAPI_EXPORT_FUNCTION(tiny_fs_stat)

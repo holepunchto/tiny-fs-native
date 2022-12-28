@@ -71,14 +71,13 @@ test('read file with non-existing encoding', function (t) {
   }
 })
 
-// + abort (core dumped)
-test.skip('write file with an object', function (t) {
+test('write file with an object', function (t) {
   t.plan(1)
 
   const root = createFolder(t)
 
   try {
-    fs.writeFile(path.join(root, 'NEW-LICENSE'), { message: 'hello' }, function () {
+    fsnode.writeFile(path.join(root, 'NEW-LICENSE'), { message: 'hello' }, function () {
       t.fail('callback should not be called')
     })
   } catch (error) {
@@ -92,11 +91,8 @@ test('write file but it is a folder', function (t) {
   const root = createFolder(t)
 
   fs.writeFile(path.join(root, 'examples'), 'ISC', function (err) {
-    // + it should be:
-    // Error: EISDIR: illegal operation on a directory
-
     t.is(err.errno, -21)
-    t.is(err.code, 'EUNKNOWN')
+    t.is(err.code, 'EISDIR')
   })
 })
 

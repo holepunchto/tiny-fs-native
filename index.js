@@ -517,25 +517,26 @@ function readFileSync (path, opts) {
   }
 }
 
-function writeFile (path, buf, opts, cb) {
-  if (typeof opts === 'function') return writeFile(path, buf, null, opts)
+function writeFile (path, data, opts, cb) {
+  if (typeof opts === 'function') return writeFile(path, data, null, opts)
   if (typeof cb !== 'function') throw typeError('ERR_INVALID_CALLBACK', 'Callback must be a function')
+  if (typeof data !== 'string' && !b4a.isBuffer(data)) throw typeError('ERR_INVALID_ARG_TYPE', 'The data argument must be of type string or buffer')
   if (typeof opts === 'string') opts = { encoding: opts }
   if (!opts) opts = {}
 
-  if (opts.encoding || typeof buf === 'string') {
-    buf = b4a.from(buf, opts.encoding)
+  if (opts.encoding || typeof data === 'string') {
+    data = b4a.from(data, opts.encoding)
   }
 
   open(path, opts.flag || 'w', opts.mode, function (err, fd) {
     if (err) return cb(err)
 
-    write(fd, buf, loop)
+    write(fd, data, loop)
 
-    function loop (err, w, buf) {
+    function loop (err, w, data) {
       if (err) return closeAndError(err)
-      if (w === buf.byteLength) return done()
-      write(fd, buf.subarray(w), loop)
+      if (w === data.byteLength) return done()
+      write(fd, data.subarray(w), loop)
     }
 
     function done () {

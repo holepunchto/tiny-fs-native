@@ -66,6 +66,7 @@ test.skip('read file with non-existing encoding', function (t) {
       t.fail('it should not reach callback')
     })
   } catch (error) {
+    // + The argument 'not-exists' is invalid encoding. Received 'encoding'
     t.is(error.code, 'ERR_UNKNOWN_ENCODING') // + it should be "ERR_INVALID_ARG_VALUE"
   }
 })
@@ -76,11 +77,8 @@ test('read file but it is a folder', function (t) {
   const root = createFolder(t)
 
   fs.readFile(path.join(root, 'examples'), { encoding: 'utf-8' }, function (err, data) {
-    // + it should be:
-    // Error: EISDIR: illegal operation on a directory
-
     t.is(err.errno, -21)
-    t.is(err.code, 'EUNKNOWN')
+    t.is(err.code, 'EISDIR')
     t.is(data, undefined)
   })
 })

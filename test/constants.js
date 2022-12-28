@@ -1,5 +1,4 @@
 const test = require('brittle')
-const path = require('path')
 const fsnode = require('fs')
 const fs = require('../index.js')
 

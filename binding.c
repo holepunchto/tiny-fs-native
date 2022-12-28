@@ -62,12 +62,8 @@ time_to_ms (uv_timespec_t time) {
 }
 
 static void
-on_fs_stat_response (uv_fs_t *req) {
-  tiny_fs_t *p = (tiny_fs_t *) req;
-
+copy_stat (uv_fs_t *req, uint64_t *s) {
   if (req->result == 0) {
-    uint64_t *s = p->stat;
-
     *(s++) = req->statbuf.st_dev;
     *(s++) = req->statbuf.st_mode;
     *(s++) = req->statbuf.st_nlink;
@@ -88,7 +84,12 @@ on_fs_stat_response (uv_fs_t *req) {
     *(s++) = time_to_ms(req->statbuf.st_ctim);
     *(s++) = time_to_ms(req->statbuf.st_birthtim);
   }
+}
 
+static void
+on_fs_stat_response (uv_fs_t *req) {
+  tiny_fs_t *p = (tiny_fs_t *) req;
+  copy_stat(req, p->stat);
   on_fs_response(req);
 }
 
@@ -117,6 +118,26 @@ NAPI_METHOD(tiny_fs_open) {
   return NULL;
 }
 
+NAPI_METHOD(tiny_fs_open_sync) {
+  NAPI_ARGV(3)
+
+  NAPI_ARGV_UTF8(path, 4096, 0)
+  NAPI_ARGV_INT32(flags, 1)
+  NAPI_ARGV_INT32(mode, 2)
+
+  uv_fs_t req;
+  uv_loop_t *loop;
+  napi_get_uv_event_loop(env, &loop);
+
+  uv_fs_open(loop, &req, path, flags, mode, NULL);
+
+  napi_value res;
+  napi_create_int32(env, req.result, &res);
+  uv_fs_req_cleanup(&req);
+
+  return res;
+}
+
 NAPI_METHOD(tiny_fs_write) {
   NAPI_ARGV(7)
 
@@ -143,6 +164,36 @@ NAPI_METHOD(tiny_fs_write) {
   uv_fs_write(loop, (uv_fs_t *) req, fd, &buf, 1, pos, on_fs_response);
 
   return NULL;
+}
+
+NAPI_METHOD(tiny_fs_write_sync) {
+  NAPI_ARGV(6)
+
+  NAPI_ARGV_UINT32(fd, 0)
+  NAPI_ARGV_BUFFER(data, 1)
+  NAPI_ARGV_UINT32(offset, 2)
+  NAPI_ARGV_UINT32(len, 3)
+  NAPI_ARGV_UINT32(pos_low, 4)
+  NAPI_ARGV_UINT32(pos_high, 5)
+
+  uv_fs_t req;
+  uv_loop_t *loop;
+  napi_get_uv_event_loop(env, &loop);
+
+  int64_t pos = ((int64_t) pos_high) * 0x100000000 + ((int64_t) pos_low);
+
+  const uv_buf_t buf = {
+    .base = data + offset,
+    .len = len
+  };
+
+  uv_fs_write(loop, (uv_fs_t *) &req, fd, &buf, 1, pos, NULL);
+
+  napi_value res;
+  napi_create_int32(env, req.result, &res);
+  uv_fs_req_cleanup(&req);
+
+  return res;
 }
 
 NAPI_METHOD(tiny_fs_writev) {
@@ -207,6 +258,36 @@ NAPI_METHOD(tiny_fs_read) {
   uv_fs_read(loop, (uv_fs_t *) req, fd, &buf, 1, pos, on_fs_response);
 
   return NULL;
+}
+
+NAPI_METHOD(tiny_fs_read_sync) {
+  NAPI_ARGV(6)
+
+  NAPI_ARGV_UINT32(fd, 0)
+  NAPI_ARGV_BUFFER(data, 1)
+  NAPI_ARGV_UINT32(offset, 2)
+  NAPI_ARGV_UINT32(len, 3)
+  NAPI_ARGV_UINT32(pos_low, 4)
+  NAPI_ARGV_UINT32(pos_high, 5)
+
+  uv_fs_t req;
+  uv_loop_t *loop;
+  napi_get_uv_event_loop(env, &loop);
+
+  int64_t pos = ((int64_t) pos_high) * 0x100000000 + ((int64_t) pos_low);
+
+  const uv_buf_t buf = {
+    .base = data + offset,
+    .len = len
+  };
+
+  uv_fs_read(loop, (uv_fs_t *) &req, fd, &buf, 1, pos, NULL);
+
+  napi_value res;
+  napi_create_int32(env, req.result, &res);
+  uv_fs_req_cleanup(&req);
+
+  return res;
 }
 
 NAPI_METHOD(tiny_fs_readv) {
@@ -281,6 +362,24 @@ NAPI_METHOD(tiny_fs_close) {
   return NULL;
 }
 
+NAPI_METHOD(tiny_fs_close_sync) {
+  NAPI_ARGV(1)
+
+  NAPI_ARGV_UINT32(fd, 0)
+
+  uv_fs_t req;
+  uv_loop_t *loop;
+  napi_get_uv_event_loop(env, &loop);
+
+  uv_fs_close(loop, &req, fd, NULL);
+
+  napi_value res;
+  napi_create_int32(env, req.result, &res);
+  uv_fs_req_cleanup(&req);
+
+  return res;
+}
+
 NAPI_METHOD(tiny_fs_rename) {
   NAPI_ARGV(3)
 
@@ -349,6 +448,26 @@ NAPI_METHOD(tiny_fs_stat) {
   return NULL;
 }
 
+NAPI_METHOD(tiny_fs_stat_sync) {
+  NAPI_ARGV(2)
+
+  NAPI_ARGV_UTF8(path, 4096, 0)
+  NAPI_ARGV_BUFFER_CAST(uint64_t *, data, 1)
+
+  uv_fs_t req;
+  uv_loop_t *loop;
+  napi_get_uv_event_loop(env, &loop);
+
+  uv_fs_stat(loop, &req, path, NULL);
+
+  napi_value res;
+  napi_create_int32(env, req.result, &res);
+  copy_stat(&req, data);
+  uv_fs_req_cleanup(&req);
+
+  return res;
+}
+
 NAPI_METHOD(tiny_fs_lstat) {
   NAPI_ARGV(3)
 
@@ -367,6 +486,26 @@ NAPI_METHOD(tiny_fs_lstat) {
   return NULL;
 }
 
+NAPI_METHOD(tiny_fs_lstat_sync) {
+  NAPI_ARGV(2)
+
+  NAPI_ARGV_UTF8(path, 4096, 0)
+  NAPI_ARGV_BUFFER_CAST(uint64_t *, data, 1)
+
+  uv_fs_t req;
+  uv_loop_t *loop;
+  napi_get_uv_event_loop(env, &loop);
+
+  uv_fs_lstat(loop, &req, path, NULL);
+
+  napi_value res;
+  napi_create_int32(env, req.result, &res);
+  copy_stat(&req, data);
+  uv_fs_req_cleanup(&req);
+
+  return res;
+}
+
 NAPI_METHOD(tiny_fs_fstat) {
   NAPI_ARGV(3)
 
@@ -383,6 +522,26 @@ NAPI_METHOD(tiny_fs_fstat) {
   uv_fs_fstat(loop, (uv_fs_t *) req, fd, on_fs_stat_response);
 
   return NULL;
+}
+
+NAPI_METHOD(tiny_fs_fstat_sync) {
+  NAPI_ARGV(2)
+
+  NAPI_ARGV_UINT32(fd, 0)
+  NAPI_ARGV_BUFFER_CAST(uint64_t *, data, 1)
+
+  uv_fs_t req;
+  uv_loop_t *loop;
+  napi_get_uv_event_loop(env, &loop);
+
+  uv_fs_fstat(loop, &req, fd, NULL);
+
+  napi_value res;
+  napi_create_int32(env, req.result, &res);
+  copy_stat(&req, data);
+  uv_fs_req_cleanup(&req);
+
+  return res;
 }
 
 NAPI_METHOD(tiny_fs_unlink) {
@@ -409,7 +568,6 @@ NAPI_INIT() {
 
   NAPI_EXPORT_FUNCTION(tiny_fs_open)
   NAPI_EXPORT_FUNCTION(tiny_fs_ftruncate)
-  NAPI_EXPORT_FUNCTION(tiny_fs_open)
   NAPI_EXPORT_FUNCTION(tiny_fs_read)
   NAPI_EXPORT_FUNCTION(tiny_fs_readv)
   NAPI_EXPORT_FUNCTION(tiny_fs_write)
@@ -422,6 +580,14 @@ NAPI_INIT() {
   NAPI_EXPORT_FUNCTION(tiny_fs_lstat)
   NAPI_EXPORT_FUNCTION(tiny_fs_fstat)
   NAPI_EXPORT_FUNCTION(tiny_fs_unlink)
+
+  NAPI_EXPORT_FUNCTION(tiny_fs_open_sync)
+  NAPI_EXPORT_FUNCTION(tiny_fs_read_sync)
+  NAPI_EXPORT_FUNCTION(tiny_fs_write_sync)
+  NAPI_EXPORT_FUNCTION(tiny_fs_stat_sync)
+  NAPI_EXPORT_FUNCTION(tiny_fs_fstat_sync)
+  NAPI_EXPORT_FUNCTION(tiny_fs_lstat_sync)
+  NAPI_EXPORT_FUNCTION(tiny_fs_close_sync)
 
   NAPI_EXPORT_UINT32(O_RDWR)
   NAPI_EXPORT_UINT32(O_RDONLY)

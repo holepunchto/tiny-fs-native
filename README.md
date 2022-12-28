@@ -29,8 +29,10 @@ fs.fstat
 fs.lstat
 fs.mkdir
 fs.rmdir
-fs.writeFile
+fs.rename
+
 fs.readFile
+fs.writeFile
 
 fs.promises.readFile
 fs.promises.writeFile
@@ -41,6 +43,16 @@ fs.promises.unlink
 
 fs.createReadStream
 fs.createWriteStream
+
+fs.writeFileSync
+fs.readFileSync
+fs.openSync
+fs.readSync
+fs.writeSync
+fs.statSync
+fs.lstatSync
+fs.fstatSync
+fs.closeSync
 ```
 
 ## License

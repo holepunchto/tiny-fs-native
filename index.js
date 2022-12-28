@@ -143,21 +143,11 @@ function write (fd, buf, offset, len, pos, cb) {
   throw new Error('Callback required')
 }
 
-function readv (fd, buffers, pos, cb) {
-  if (typeof pos === 'function') {
-    cb = pos
-    pos = null
-  }
-
-  const req = getReq()
-
-  req.buffers = buffers
-  req.callback = cb
-
+function writeSync (fd, buf, offset = 0, len = buf.byteLength, pos = null) {
   const low = pos === null ? 0xffffffff : ((pos & 0xffffffff) >>> 0)
   const high = pos === null ? 0xffffffff : (pos - low) / 0x100000000
 
-  binding.tiny_fs_readv(req.handle, fd, buffers, low, high)
+  return binding.tiny_fs_write_sync(fd, buf, offset, len, low, high)
 }
 
 function writev (fd, buffers, pos, cb) {
@@ -198,6 +188,30 @@ function read (fd, buf, offset, len, pos, cb) {
   throw new Error('Callback required')
 }
 
+function readSync (fd, buf, offset = 0, len = buf.byteLength, pos = null) {
+  const low = pos === null ? 0xffffffff : ((pos & 0xffffffff) >>> 0)
+  const high = pos === null ? 0xffffffff : (pos - low) / 0x100000000
+
+  return binding.tiny_fs_read_sync(fd, buf, offset, len, low, high)
+}
+
+function readv (fd, buffers, pos, cb) {
+  if (typeof pos === 'function') {
+    cb = pos
+    pos = null
+  }
+
+  const req = getReq()
+
+  req.buffers = buffers
+  req.callback = cb
+
+  const low = pos === null ? 0xffffffff : ((pos & 0xffffffff) >>> 0)
+  const high = pos === null ? 0xffffffff : (pos - low) / 0x100000000
+
+  binding.tiny_fs_readv(req.handle, fd, buffers, low, high)
+}
+
 function open (filename, flags, mode, cb) {
   if (typeof mode === 'function') {
     cb = mode
@@ -214,11 +228,29 @@ function open (filename, flags, mode, cb) {
   binding.tiny_fs_open(req.handle, filename, flags, typeof mode === 'number' ? mode : 0o666)
 }
 
+function openSync (filename, flags, mode) {
+  if (typeof flags === 'string') {
+    flags = flagsToNumber(flags)
+  }
+
+  const res = binding.tiny_fs_open_sync(filename, flags, typeof mode === 'number' ? mode : 0o666)
+
+  if (res < 0) throw createError(res)
+  return res
+}
+
 function close (fd, cb) {
   const req = getReq()
 
   req.callback = cb
   binding.tiny_fs_close(req.handle, fd)
+}
+
+function closeSync (fd) {
+  const res = binding.tiny_fs_close_sync(fd)
+
+  if (res < 0) throw createError(res)
+  return res
 }
 
 function ftruncate (fd, len, cb) {
@@ -303,6 +335,13 @@ function stat (path, cb) {
   binding.tiny_fs_stat(req.handle, path, req.buffer)
 }
 
+function statSync (path) {
+  const buffer = b4a.allocUnsafe(16 * 8)
+  const res = binding.tiny_fs_stat_sync(path, buffer)
+  if (res < 0) throw createError(res)
+  return new Stats(buffer)
+}
+
 function lstat (path, cb) {
   const req = getReq()
 
@@ -316,6 +355,13 @@ function lstat (path, cb) {
   binding.tiny_fs_lstat(req.handle, path, req.buffer)
 }
 
+function lstatSync (path) {
+  const buffer = b4a.allocUnsafe(16 * 8)
+  const res = binding.tiny_fs_lstat_sync(path, buffer)
+  if (res < 0) throw createError(res)
+  return new Stats(buffer)
+}
+
 function fstat (fd, cb) {
   const req = getReq()
 
@@ -327,6 +373,13 @@ function fstat (fd, cb) {
   }
 
   binding.tiny_fs_fstat(req.handle, fd, req.buffer)
+}
+
+function fstatSync (fd) {
+  const buffer = b4a.allocUnsafe(16 * 8)
+  const res = binding.tiny_fs_fstat_sync(fd, buffer)
+  if (res < 0) throw createError(res)
+  return new Stats(buffer)
 }
 
 function mkdirp (path, mode, cb) {
@@ -405,17 +458,20 @@ function readFile (path, opts, cb) {
     fstat(fd, function (err, st) {
       if (err) return closeAndError(err)
 
-      const buf = b4a.allocUnsafe(st.size)
+      let buf = b4a.allocUnsafe(st.size)
+      let len = 0
 
       read(fd, buf, loop)
 
-      function loop (err, r, buf) {
+      function loop (err, r) {
         if (err) return closeAndError(err)
-        if (r === buf.byteLength) return done()
-        read(fd, buf.subarray(r), loop)
+        len += r
+        if (r === 0 || len === buf.byteLength) return done()
+        read(fd, buf.subarray(len), loop)
       }
 
       function done () {
+        if (len !== buf.byteLength) buf = buf.subarray(0, len)
         close(fd, function (err) {
           if (err) return cb(err)
           if (opts.encoding) return cb(null, b4a.toString(buf, opts.encoding))
@@ -430,6 +486,34 @@ function readFile (path, opts, cb) {
       })
     }
   })
+}
+
+function readFileSync (path, opts) {
+  if (typeof opts === 'string') opts = { encoding: opts }
+  if (!opts) opts = {}
+
+  const fd = openSync(path, opts.flag || 'r')
+
+  try {
+    const st = fstatSync(fd)
+
+    let buf = b4a.allocUnsafe(st.size)
+    let len = 0
+
+    while (true) {
+      const r = readSync(fd, len ? buf.subarray(len) : buf)
+      len += r
+      if (r === 0 || len === buf.byteLength) break
+    }
+    if (len !== buf.byteLength) buf = buf.subarray(0, len)
+
+    if (opts.encoding) return b4a.toString(buf, opts.encoding)
+    return buf
+  } finally {
+    try {
+      closeSync(fd)
+    } catch {}
+  }
 }
 
 function writeFile (path, buf, opts, cb) {
@@ -465,6 +549,29 @@ function writeFile (path, buf, opts, cb) {
       })
     }
   })
+}
+
+function writeFileSync (path, buf, opts) {
+  if (typeof opts === 'string') opts = { encoding: opts }
+  if (!opts) opts = {}
+
+  if (opts.encoding || typeof buf === 'string') {
+    buf = b4a.from(buf, opts.encoding)
+  }
+
+  const fd = openSync(path, opts.flag || 'w', opts.mode)
+
+  try {
+    let len = 0
+    while (true) {
+      len += writeSync(fd, len ? buf.subarray(len) : buf)
+      if (len === buf.byteLength) break
+    }
+  } finally {
+    try {
+      closeSync(fd)
+    } catch {}
+  }
 }
 
 class FileWriteStream extends Writable {
@@ -580,6 +687,17 @@ exports.write = write
 exports.writev = writev
 exports.ftruncate = ftruncate
 exports.fstat = fstat
+
+exports.openSync = openSync
+exports.closeSync = closeSync
+exports.readSync = readSync
+exports.writeSync = writeSync
+exports.fstatSync = fstatSync
+exports.statSync = statSync
+exports.lstatSync = lstatSync
+
+exports.readFileSync = readFileSync
+exports.writeFileSync = writeFileSync
 
 exports.unlink = unlink
 exports.promises.unlink = promisify(unlink)

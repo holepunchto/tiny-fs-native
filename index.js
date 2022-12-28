@@ -218,7 +218,7 @@ function close (fd, cb) {
   const req = getReq()
 
   req.callback = cb
-  binding.tiny_fs_close(req.handle, fd, cb)
+  binding.tiny_fs_close(req.handle, fd)
 }
 
 function ftruncate (fd, len, cb) {

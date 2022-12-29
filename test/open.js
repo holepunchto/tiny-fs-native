@@ -38,19 +38,19 @@ test('open new file with mode', function (t) {
 
   const root = createFolder(t)
 
-  fs.open(path.join(root, 'NEW-LICENSE-TWO'), 'wx', function (err, fd) {
-    t.is(err, null)
-    t.is(typeof fd, 'number')
-
-    t.is(fsnode.fstatSync(fd).mode, 33204) // => 0o666
-    fsnode.closeSync(fd)
-  })
-
   fs.open(path.join(root, 'NEW-LICENSE'), 'wx', 0o655, function (err, fd) {
     t.is(err, null)
     t.is(typeof fd, 'number')
 
     t.is(fsnode.fstatSync(fd).mode, 33197) // => 0o655
+    fsnode.closeSync(fd)
+  })
+
+  fs.open(path.join(root, 'NEW-LICENSE'), 'wx', 0o755, function (err, fd) {
+    t.is(err, null)
+    t.is(typeof fd, 'number')
+
+    t.is(fsnode.fstatSync(fd).mode, 33261) // => 0o755
     fsnode.closeSync(fd)
   })
 })

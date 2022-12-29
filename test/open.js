@@ -13,6 +13,8 @@ test('open', function (t) {
   fs.open(path.join(root, 'LICENSE'), function (err, fd) {
     t.is(err, null)
     t.is(typeof fd, 'number')
+
+    fsnode.closeSync(fd)
   })
 })
 
@@ -30,6 +32,8 @@ test('open with flags', function (t) {
 
     t.alike(data, b4a.alloc(32)) // empty means that w+ flags had effect
     t.is(bytesRead, 0)
+
+    fsnode.closeSync(fd)
   })
 })
 
@@ -117,6 +121,8 @@ test('open but it is a folder', function (t) {
   fs.open(path.join(root, 'examples'), function (err, fd) {
     t.is(err, null)
     t.is(typeof fd, 'number')
+
+    fsnode.closeSync(fd)
   })
 })
 

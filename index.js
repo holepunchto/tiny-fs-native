@@ -60,7 +60,7 @@ function flagsToNumber (flags) {
     case 'sa+': return constants.O_APPEND | constants.O_CREAT | constants.O_RDWR | constants.O_SYNC
   }
 
-  throw new Error(`Invalid value in flags: ${flags}`)
+  throw typeError('ERR_INVALID_ARG_VALUE', `Invalid value in flags: ${flags}`)
 }
 
 function alloc () {
@@ -212,20 +212,25 @@ function readv (fd, buffers, pos, cb) {
   binding.tiny_fs_readv(req.handle, fd, buffers, low, high)
 }
 
-function open (filename, flags, mode, cb) {
-  if (typeof mode === 'function') {
-    cb = mode
-    mode = 0o666
-  }
+function open (filename, flags = 'r', mode = 0o666, cb) {
+  if (typeof filename !== 'string') throw typeError('ERR_INVALID_ARG_TYPE', 'Path must be a string. Received ' + filename)
+  if (typeof flags === 'function') return open(filename, undefined, undefined, flags)
+  if (typeof mode === 'function') return open(filename, flags, undefined, mode)
+  if (typeof cb !== 'function') throw typeError('ERR_INVALID_ARG_TYPE', 'Callback must be a function. Received ' + cb)
 
   if (typeof flags === 'string') {
     flags = flagsToNumber(flags)
   }
 
+  if (typeof mode === 'string') {
+    mode = parseInt(mode, 8)
+    if (isNaN(mode)) throw typeError('ERR_INVALID_ARG_VALUE', 'Mode must be a number or octal string')
+  }
+
   const req = getReq()
 
   req.callback = cb
-  binding.tiny_fs_open(req.handle, filename, flags, typeof mode === 'number' ? mode : 0o666)
+  binding.tiny_fs_open(req.handle, filename, flags, mode)
 }
 
 function openSync (filename, flags, mode) {
@@ -240,9 +245,13 @@ function openSync (filename, flags, mode) {
 }
 
 function close (fd, cb) {
+  if (typeof fd !== 'number') throw typeError('ERR_INVALID_ARG_TYPE', 'File descriptor must be a number. Received type ' + (typeof fd) + ' (' + fd + ')')
+  if (cb && typeof cb !== 'function') throw typeError('ERR_INVALID_ARG_TYPE', 'Callback must be a function. Received type ' + (typeof cb) + ' (' + cb + ')')
+  if (!(fd >= 0 && fd <= 0x7fffffff)) throw typeError('ERR_OUT_OF_RANGE', 'File descriptor is out of range. It must be >= 0 && <= 2147483647. Received ' + fd)
+
   const req = getReq()
 
-  req.callback = cb
+  req.callback = cb || noop
   binding.tiny_fs_close(req.handle, fd)
 }
 
@@ -449,6 +458,7 @@ function unlink (path, cb) {
 
 function readFile (path, opts, cb) {
   if (typeof opts === 'function') return readFile(path, null, opts)
+  if (typeof cb !== 'function') throw typeError('ERR_INVALID_ARG_TYPE', 'Callback must be a function')
   if (typeof opts === 'string') opts = { encoding: opts }
   if (!opts) opts = {}
 
@@ -516,24 +526,26 @@ function readFileSync (path, opts) {
   }
 }
 
-function writeFile (path, buf, opts, cb) {
-  if (typeof opts === 'function') return writeFile(path, buf, null, opts)
+function writeFile (path, data, opts, cb) {
+  if (typeof opts === 'function') return writeFile(path, data, null, opts)
+  if (typeof cb !== 'function') throw typeError('ERR_INVALID_ARG_TYPE', 'Callback must be a function')
+  if (typeof data !== 'string' && !b4a.isBuffer(data)) throw typeError('ERR_INVALID_ARG_TYPE', 'The data argument must be of type string or buffer')
   if (typeof opts === 'string') opts = { encoding: opts }
   if (!opts) opts = {}
 
-  if (opts.encoding || typeof buf === 'string') {
-    buf = b4a.from(buf, opts.encoding)
+  if (opts.encoding || typeof data === 'string') {
+    data = b4a.from(data, opts.encoding)
   }
 
   open(path, opts.flag || 'w', opts.mode, function (err, fd) {
     if (err) return cb(err)
 
-    write(fd, buf, loop)
+    write(fd, data, loop)
 
-    function loop (err, w, buf) {
+    function loop (err, w, data) {
       if (err) return closeAndError(err)
-      if (w === buf.byteLength) return done()
-      write(fd, buf.subarray(w), loop)
+      if (w === data.byteLength) return done()
+      write(fd, data.subarray(w), loop)
     }
 
     function done () {
@@ -678,6 +690,14 @@ class FileReadStream extends Readable {
 }
 
 exports.promises = {}
+
+function typeError (code, message) {
+  const error = new TypeError(message)
+  error.code = code
+  return error
+}
+
+function noop () {}
 
 exports.open = open
 exports.close = close

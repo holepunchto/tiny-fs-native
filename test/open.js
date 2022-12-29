@@ -46,11 +46,11 @@ test('open new file with mode', function (t) {
     fsnode.closeSync(fd)
   })
 
-  fs.open(path.join(root, 'NEW-LICENSE'), 'wx', 0o755, function (err, fd) {
+  fs.open(path.join(root, 'NEW-LICENSE-TWO'), 'wx', 0o665, function (err, fd) {
     t.is(err, null)
     t.is(typeof fd, 'number')
 
-    t.is(fsnode.fstatSync(fd).mode, 33261) // => 0o755
+    t.is(fsnode.fstatSync(fd).mode, 33205) // => 0o665
     fsnode.closeSync(fd)
   })
 })

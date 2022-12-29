@@ -60,7 +60,7 @@ function flagsToNumber (flags) {
     case 'sa+': return constants.O_APPEND | constants.O_CREAT | constants.O_RDWR | constants.O_SYNC
   }
 
-  throw new Error(`Invalid value in flags: ${flags}`)
+  throw typeError('ERR_INVALID_ARG_VALUE', `Invalid value in flags: ${flags}`)
 }
 
 function alloc () {
@@ -212,20 +212,25 @@ function readv (fd, buffers, pos, cb) {
   binding.tiny_fs_readv(req.handle, fd, buffers, low, high)
 }
 
-function open (filename, flags, mode, cb) {
-  if (typeof mode === 'function') {
-    cb = mode
-    mode = 0o666
-  }
+function open (filename, flags = 'r', mode = 0o666, cb) {
+  if (typeof filename !== 'string') throw typeError('ERR_INVALID_ARG_TYPE', 'Path must be a string. Received ' + filename)
+  if (typeof flags === 'function') return open(filename, undefined, undefined, flags)
+  if (typeof mode === 'function') return open(filename, flags, undefined, mode)
+  if (typeof cb !== 'function') throw typeError('ERR_INVALID_ARG_TYPE', 'Callback must be a function. Received ' + cb)
 
   if (typeof flags === 'string') {
     flags = flagsToNumber(flags)
   }
 
+  if (typeof mode === 'string') {
+    mode = parseInt(mode, 8)
+    if (isNaN(mode)) throw typeError('ERR_INVALID_ARG_VALUE', 'Mode must be a number or octal string')
+  }
+
   const req = getReq()
 
   req.callback = cb
-  binding.tiny_fs_open(req.handle, filename, flags, typeof mode === 'number' ? mode : 0o666)
+  binding.tiny_fs_open(req.handle, filename, flags, mode)
 }
 
 function openSync (filename, flags, mode) {

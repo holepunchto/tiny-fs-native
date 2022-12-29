@@ -63,6 +63,12 @@ function flagsToNumber (flags) {
   throw typeError('ERR_INVALID_ARG_VALUE', `Invalid value in flags: ${flags}`)
 }
 
+function modeToNumber (mode) {
+  mode = parseInt(mode, 8)
+  if (isNaN(mode)) throw typeError('ERR_INVALID_ARG_VALUE', 'Mode must be a number or octal string')
+  return mode
+}
+
 function alloc () {
   const handle = b4a.alloc(binding.sizeof_tiny_fs_t)
   const view = new Uint32Array(handle.buffer, handle.byteOffset + binding.offsetof_tiny_fs_t_id, 1)
@@ -218,14 +224,8 @@ function open (filename, flags = 'r', mode = 0o666, cb) {
   if (typeof mode === 'function') return open(filename, flags, undefined, mode)
   if (typeof cb !== 'function') throw typeError('ERR_INVALID_ARG_TYPE', 'Callback must be a function. Received ' + cb)
 
-  if (typeof flags === 'string') {
-    flags = flagsToNumber(flags)
-  }
-
-  if (typeof mode === 'string') {
-    mode = parseInt(mode, 8)
-    if (isNaN(mode)) throw typeError('ERR_INVALID_ARG_VALUE', 'Mode must be a number or octal string')
-  }
+  if (typeof flags === 'string') flags = flagsToNumber(flags)
+  if (typeof mode === 'string') mode = modeToNumber(mode)
 
   const req = getReq()
 
@@ -233,25 +233,24 @@ function open (filename, flags = 'r', mode = 0o666, cb) {
   binding.tiny_fs_open(req.handle, filename, flags, mode)
 }
 
-function openSync (filename, flags, mode) {
-  if (typeof flags === 'string') {
-    flags = flagsToNumber(flags)
-  }
+function openSync (filename, flags = 'r', mode = 0o666) {
+  if (typeof flags === 'string') flags = flagsToNumber(flags)
+  if (typeof mode === 'string') mode = modeToNumber(mode)
 
-  const res = binding.tiny_fs_open_sync(filename, flags, typeof mode === 'number' ? mode : 0o666)
+  const res = binding.tiny_fs_open_sync(filename, flags, mode)
 
   if (res < 0) throw createError(res)
   return res
 }
 
-function close (fd, cb) {
+function close (fd, cb = noop) {
   if (typeof fd !== 'number') throw typeError('ERR_INVALID_ARG_TYPE', 'File descriptor must be a number. Received type ' + (typeof fd) + ' (' + fd + ')')
-  if (cb && typeof cb !== 'function') throw typeError('ERR_INVALID_ARG_TYPE', 'Callback must be a function. Received type ' + (typeof cb) + ' (' + cb + ')')
+  if (typeof cb !== 'function') throw typeError('ERR_INVALID_ARG_TYPE', 'Callback must be a function. Received type ' + (typeof cb) + ' (' + cb + ')')
   if (!(fd >= 0 && fd <= 0x7fffffff)) throw typeError('ERR_OUT_OF_RANGE', 'File descriptor is out of range. It must be >= 0 && <= 2147483647. Received ' + fd)
 
   const req = getReq()
 
-  req.callback = cb || noop
+  req.callback = cb
   binding.tiny_fs_close(req.handle, fd)
 }
 

@@ -146,7 +146,7 @@ function write (fd, buf, offset, len, pos, cb) {
   if (typeof len === 'function') return write(fd, buf, offset, buf.byteLength - offset, null, len)
   if (typeof pos === 'function') return write(fd, buf, offset, len, null, pos)
 
-  throw new Error('Callback required')
+  throw typeError('ERR_INVALID_ARG_TYPE', 'Callback must be a function. Received ' + cb)
 }
 
 function writeSync (fd, buf, offset = 0, len = buf.byteLength, pos = null) {
@@ -191,7 +191,7 @@ function read (fd, buf, offset, len, pos, cb) {
   if (typeof len === 'function') return read(fd, buf, offset, buf.byteLength - offset, null, len)
   if (typeof pos === 'function') return read(fd, buf, offset, len, null, pos)
 
-  throw new Error('Callback required')
+  throw typeError('ERR_INVALID_ARG_TYPE', 'Callback must be a function. Received ' + cb)
 }
 
 function readSync (fd, buf, offset = 0, len = buf.byteLength, pos = null) {
@@ -220,8 +220,10 @@ function readv (fd, buffers, pos, cb) {
 
 function open (filename, flags = 'r', mode = 0o666, cb) {
   if (typeof filename !== 'string') throw typeError('ERR_INVALID_ARG_TYPE', 'Path must be a string. Received ' + filename)
+
   if (typeof flags === 'function') return open(filename, undefined, undefined, flags)
   if (typeof mode === 'function') return open(filename, flags, undefined, mode)
+
   if (typeof cb !== 'function') throw typeError('ERR_INVALID_ARG_TYPE', 'Callback must be a function. Received ' + cb)
 
   if (typeof flags === 'string') flags = flagsToNumber(flags)
@@ -234,6 +236,8 @@ function open (filename, flags = 'r', mode = 0o666, cb) {
 }
 
 function openSync (filename, flags = 'r', mode = 0o666) {
+  if (typeof filename !== 'string') throw typeError('ERR_INVALID_ARG_TYPE', 'Path must be a string. Received ' + filename)
+
   if (typeof flags === 'string') flags = flagsToNumber(flags)
   if (typeof mode === 'string') mode = modeToNumber(mode)
 

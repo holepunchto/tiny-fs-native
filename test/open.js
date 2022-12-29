@@ -126,7 +126,7 @@ test('open but it is a folder', function (t) {
   })
 })
 
-test('open with with no callback', function (t) {
+test('open with no callback', function (t) {
   t.plan(6)
 
   const root = createFolder(t)

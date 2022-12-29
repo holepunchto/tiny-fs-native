@@ -245,9 +245,13 @@ function openSync (filename, flags, mode) {
 }
 
 function close (fd, cb) {
+  if (typeof fd !== 'number') throw typeError('ERR_INVALID_ARG_TYPE', 'File descriptor must be a number. Received type ' + (typeof fd) + ' (' + fd + ')')
+  if (cb && typeof cb !== 'function') throw typeError('ERR_INVALID_ARG_TYPE', 'Callback must be a function. Received type ' + (typeof cb) + ' (' + cb + ')')
+  if (!(fd >= 0 && fd <= 0x7fffffff)) throw typeError('ERR_OUT_OF_RANGE', 'File descriptor is out of range. It must be >= 0 && <= 2147483647. Received ' + fd)
+
   const req = getReq()
 
-  req.callback = cb
+  req.callback = cb || noop
   binding.tiny_fs_close(req.handle, fd)
 }
 
@@ -692,6 +696,8 @@ function typeError (code, message) {
   error.code = code
   return error
 }
+
+function noop () {}
 
 exports.open = open
 exports.close = close

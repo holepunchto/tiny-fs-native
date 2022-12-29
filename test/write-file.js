@@ -108,35 +108,37 @@ test('write file with flags', function (t) {
 })
 
 test('write file with no callback', function (t) {
-  t.plan(8)
+  t.plan(5)
 
   const root = createFolder(t)
 
   try {
     fs.writeFile()
   } catch (error) {
-    t.ok(error.message.startsWith('Callback must be a function'))
-    t.is(error.code, 'ERR_INVALID_CALLBACK')
+    t.is(error.code, 'ERR_INVALID_ARG_TYPE')
   }
 
   try {
     fs.writeFile(function () {})
   } catch (error) {
-    t.ok(error.message.startsWith('Callback must be a function'))
-    t.is(error.code, 'ERR_INVALID_CALLBACK')
+    t.is(error.code, 'ERR_INVALID_ARG_TYPE')
   }
 
   try {
     fs.writeFile(path.join(root, 'LICENSE'))
   } catch (error) {
-    t.ok(error.message.startsWith('Callback must be a function'))
-    t.is(error.code, 'ERR_INVALID_CALLBACK')
+    t.is(error.code, 'ERR_INVALID_ARG_TYPE')
   }
 
   try {
     fs.writeFile(path.join(root, 'LICENSE'), { flag: 'w+' })
   } catch (error) {
-    t.ok(error.message.startsWith('Callback must be a function'))
-    t.is(error.code, 'ERR_INVALID_CALLBACK')
+    t.is(error.code, 'ERR_INVALID_ARG_TYPE')
+  }
+
+  try {
+    fs.writeFile(path.join(root, 'LICENSE'), { flag: 'w+' }, true)
+  } catch (error) {
+    t.is(error.code, 'ERR_INVALID_ARG_TYPE')
   }
 })

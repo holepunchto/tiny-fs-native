@@ -449,7 +449,7 @@ function unlink (path, cb) {
 
 function readFile (path, opts, cb) {
   if (typeof opts === 'function') return readFile(path, null, opts)
-  if (typeof cb !== 'function') throw typeError('ERR_INVALID_CALLBACK', 'Callback must be a function')
+  if (typeof cb !== 'function') throw typeError('ERR_INVALID_ARG_TYPE', 'Callback must be a function')
   if (typeof opts === 'string') opts = { encoding: opts }
   if (!opts) opts = {}
 
@@ -519,7 +519,7 @@ function readFileSync (path, opts) {
 
 function writeFile (path, data, opts, cb) {
   if (typeof opts === 'function') return writeFile(path, data, null, opts)
-  if (typeof cb !== 'function') throw typeError('ERR_INVALID_CALLBACK', 'Callback must be a function')
+  if (typeof cb !== 'function') throw typeError('ERR_INVALID_ARG_TYPE', 'Callback must be a function')
   if (typeof data !== 'string' && !b4a.isBuffer(data)) throw typeError('ERR_INVALID_ARG_TYPE', 'The data argument must be of type string or buffer')
   if (typeof opts === 'string') opts = { encoding: opts }
   if (!opts) opts = {}

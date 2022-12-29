@@ -90,40 +90,42 @@ test('read file with flags', function (t) {
 
   fs.readFile(path.join(root, 'LICENSE'), { flag: 'w+' }, function (err, data) {
     t.is(err, null)
-    t.alike(data, b4a.from('')) // empty means that w+ flags had effect
+    t.alike(data, b4a.alloc(0)) // empty means that w+ flags had effect
   })
 })
 
 test('read file with no callback', function (t) {
-  t.plan(8)
+  t.plan(5)
 
   const root = createFolder(t)
 
   try {
     fs.readFile()
   } catch (error) {
-    t.ok(error.message.startsWith('Callback must be a function'))
-    t.is(error.code, 'ERR_INVALID_CALLBACK')
+    t.is(error.code, 'ERR_INVALID_ARG_TYPE')
   }
 
   try {
     fs.readFile(function () {})
   } catch (error) {
-    t.ok(error.message.startsWith('Callback must be a function'))
-    t.is(error.code, 'ERR_INVALID_CALLBACK')
+    t.is(error.code, 'ERR_INVALID_ARG_TYPE')
   }
 
   try {
     fs.readFile(path.join(root, 'LICENSE'))
   } catch (error) {
-    t.ok(error.message.startsWith('Callback must be a function'))
-    t.is(error.code, 'ERR_INVALID_CALLBACK')
+    t.is(error.code, 'ERR_INVALID_ARG_TYPE')
   }
 
   try {
-    fs.readFile(path.join(root, 'LICENSE'), { flag: 'w+' })
+    fs.readFile(path.join(root, 'LICENSE'), { flag: 'r' })
   } catch (error) {
-    t.ok(error.message.startsWith('Callback must be a function'))
-    t.is(error.code, 'ERR_INVALID_CALLBACK')
+    t.is(error.code, 'ERR_INVALID_ARG_TYPE')
+  }
+
+  try {
+    fs.readFile(path.join(root, 'LICENSE'), { flag: 'r' }, true)
+  } catch (error) {
+    t.is(error.code, 'ERR_INVALID_ARG_TYPE')
   }
 })

@@ -7,7 +7,7 @@ const ERRORS = new Map(binding.uv_error_map)
 
 const ERR_INVALID_ARG_TYPE = typeError.bind(null, 'ERR_INVALID_ARG_TYPE')
 const ERR_INVALID_ARG_VALUE = typeError.bind(null, 'ERR_INVALID_ARG_VALUE')
-const ERR_OUT_OF_RANGE = typeError.bind(null, 'ERR_OUT_OF_RANGE')
+const ERR_OUT_OF_RANGE = typeError.bind(null, 'ERR_OUT_OF_RANGE') // + new RangeError?
 
 const sep = exports.sep = binding.IS_WINDOWS ? '\\' : '/'
 
@@ -179,6 +179,8 @@ function writev (fd, buffers, pos, cb) {
 
 function read (fd, buf, offset, len, pos, cb) {
   if (typeof cb === 'function') {
+    if (len > buf.byteLength - offset) throw ERR_OUT_OF_RANGE('Length is out of range. It must be <= ' + (buf.byteLength - offset) + '. Received ' + len)
+
     const req = getReq()
 
     req.buffer = buf

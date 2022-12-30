@@ -2,13 +2,15 @@ const path = require('path')
 const fs = require('fs')
 const fsp = require('fs/promises')
 const os = require('os')
+const b4a = require('b4a')
 
 const isWin = os.platform() === 'win32'
 
 module.exports = {
   createTmpDir,
   createFolder,
-  isWin
+  isWin,
+  makeBuffer
 }
 
 function createTmpDir (t) {
@@ -50,4 +52,10 @@ function generateTestFiles (t, root) {
   fs.chmodSync(fullpath('key.secret'), 0o222)
   fs.chmodSync(fullpath('script.sh'), 0o755)
   if (!isWin) fs.symlinkSync('LICENSE', fullpath('LICENSE.shortcut'))
+}
+
+function makeBuffer (byteLength, data, offset = 0) {
+  const buffer = b4a.alloc(byteLength)
+  buffer.set(b4a.from(data), offset)
+  return buffer
 }

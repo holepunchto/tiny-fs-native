@@ -5,6 +5,9 @@ const b4a = require('b4a')
 const LE = (new Uint8Array(new Uint16Array([255]).buffer))[0] === 0xff
 const ERRORS = new Map(binding.uv_error_map)
 
+const ERR_INVALID_ARG_TYPE = typeError.bind(null, 'ERR_INVALID_ARG_TYPE')
+const ERR_OUT_OF_RANGE = typeError.bind(null, 'ERR_OUT_OF_RANGE')
+
 const sep = exports.sep = binding.IS_WINDOWS ? '\\' : '/'
 
 const constants = exports.constants = {
@@ -146,7 +149,7 @@ function write (fd, buf, offset, len, pos, cb) {
   if (typeof len === 'function') return write(fd, buf, offset, buf.byteLength - offset, null, len)
   if (typeof pos === 'function') return write(fd, buf, offset, len, null, pos)
 
-  throw typeError('ERR_INVALID_ARG_TYPE', 'Callback must be a function. Received ' + cb)
+  throw ERR_INVALID_ARG_TYPE('Callback must be a function. Received ' + cb)
 }
 
 function writeSync (fd, buf, offset = 0, len = buf.byteLength, pos = null) {
@@ -191,7 +194,7 @@ function read (fd, buf, offset, len, pos, cb) {
   if (typeof len === 'function') return read(fd, buf, offset, buf.byteLength - offset, null, len)
   if (typeof pos === 'function') return read(fd, buf, offset, len, null, pos)
 
-  throw typeError('ERR_INVALID_ARG_TYPE', 'Callback must be a function. Received ' + cb)
+  throw ERR_INVALID_ARG_TYPE('Callback must be a function. Received ' + cb)
 }
 
 function readSync (fd, buf, offset = 0, len = buf.byteLength, pos = null) {
@@ -219,12 +222,12 @@ function readv (fd, buffers, pos, cb) {
 }
 
 function open (filename, flags = 'r', mode = 0o666, cb) {
-  if (typeof filename !== 'string') throw typeError('ERR_INVALID_ARG_TYPE', 'Path must be a string. Received ' + filename)
+  if (typeof filename !== 'string') throw ERR_INVALID_ARG_TYPE('Path must be a string. Received ' + filename)
 
   if (typeof flags === 'function') return open(filename, undefined, undefined, flags)
   if (typeof mode === 'function') return open(filename, flags, undefined, mode)
 
-  if (typeof cb !== 'function') throw typeError('ERR_INVALID_ARG_TYPE', 'Callback must be a function. Received ' + cb)
+  if (typeof cb !== 'function') throw ERR_INVALID_ARG_TYPE('Callback must be a function. Received ' + cb)
 
   if (typeof flags === 'string') flags = flagsToNumber(flags)
   if (typeof mode === 'string') mode = modeToNumber(mode)
@@ -236,7 +239,7 @@ function open (filename, flags = 'r', mode = 0o666, cb) {
 }
 
 function openSync (filename, flags = 'r', mode = 0o666) {
-  if (typeof filename !== 'string') throw typeError('ERR_INVALID_ARG_TYPE', 'Path must be a string. Received ' + filename)
+  if (typeof filename !== 'string') throw ERR_INVALID_ARG_TYPE('Path must be a string. Received ' + filename)
 
   if (typeof flags === 'string') flags = flagsToNumber(flags)
   if (typeof mode === 'string') mode = modeToNumber(mode)
@@ -248,9 +251,9 @@ function openSync (filename, flags = 'r', mode = 0o666) {
 }
 
 function close (fd, cb = noop) {
-  if (typeof fd !== 'number') throw typeError('ERR_INVALID_ARG_TYPE', 'File descriptor must be a number. Received type ' + (typeof fd) + ' (' + fd + ')')
-  if (typeof cb !== 'function') throw typeError('ERR_INVALID_ARG_TYPE', 'Callback must be a function. Received type ' + (typeof cb) + ' (' + cb + ')')
-  if (!(fd >= 0 && fd <= 0x7fffffff)) throw typeError('ERR_OUT_OF_RANGE', 'File descriptor is out of range. It must be >= 0 && <= 2147483647. Received ' + fd)
+  if (typeof fd !== 'number') throw ERR_INVALID_ARG_TYPE('File descriptor must be a number. Received type ' + (typeof fd) + ' (' + fd + ')')
+  if (typeof cb !== 'function') throw ERR_INVALID_ARG_TYPE('Callback must be a function. Received type ' + (typeof cb) + ' (' + cb + ')')
+  if (!(fd >= 0 && fd <= 0x7fffffff)) throw ERR_OUT_OF_RANGE('File descriptor is out of range. It must be >= 0 && <= 2147483647. Received ' + fd)
 
   const req = getReq()
 
@@ -461,7 +464,7 @@ function unlink (path, cb) {
 
 function readFile (path, opts, cb) {
   if (typeof opts === 'function') return readFile(path, null, opts)
-  if (typeof cb !== 'function') throw typeError('ERR_INVALID_ARG_TYPE', 'Callback must be a function')
+  if (typeof cb !== 'function') throw ERR_INVALID_ARG_TYPE('Callback must be a function')
   if (typeof opts === 'string') opts = { encoding: opts }
   if (!opts) opts = {}
 
@@ -531,8 +534,8 @@ function readFileSync (path, opts) {
 
 function writeFile (path, data, opts, cb) {
   if (typeof opts === 'function') return writeFile(path, data, null, opts)
-  if (typeof cb !== 'function') throw typeError('ERR_INVALID_ARG_TYPE', 'Callback must be a function')
-  if (typeof data !== 'string' && !b4a.isBuffer(data)) throw typeError('ERR_INVALID_ARG_TYPE', 'The data argument must be of type string or buffer')
+  if (typeof cb !== 'function') throw ERR_INVALID_ARG_TYPE('Callback must be a function')
+  if (typeof data !== 'string' && !b4a.isBuffer(data)) throw ERR_INVALID_ARG_TYPE('The data argument must be of type string or buffer')
   if (typeof opts === 'string') opts = { encoding: opts }
   if (!opts) opts = {}
 

@@ -6,6 +6,7 @@ const LE = (new Uint8Array(new Uint16Array([255]).buffer))[0] === 0xff
 const ERRORS = new Map(binding.uv_error_map)
 
 const ERR_INVALID_ARG_TYPE = typeError.bind(null, 'ERR_INVALID_ARG_TYPE')
+const ERR_INVALID_ARG_VALUE = typeError.bind(null, 'ERR_INVALID_ARG_VALUE')
 const ERR_OUT_OF_RANGE = typeError.bind(null, 'ERR_OUT_OF_RANGE')
 
 const sep = exports.sep = binding.IS_WINDOWS ? '\\' : '/'
@@ -63,12 +64,12 @@ function flagsToNumber (flags) {
     case 'sa+': return constants.O_APPEND | constants.O_CREAT | constants.O_RDWR | constants.O_SYNC
   }
 
-  throw typeError('ERR_INVALID_ARG_VALUE', `Invalid value in flags: ${flags}`)
+  throw ERR_INVALID_ARG_VALUE(`Invalid value in flags: ${flags}`)
 }
 
 function modeToNumber (mode) {
   mode = parseInt(mode, 8)
-  if (isNaN(mode)) throw typeError('ERR_INVALID_ARG_VALUE', 'Mode must be a number or octal string')
+  if (isNaN(mode)) throw ERR_INVALID_ARG_VALUE('Mode must be a number or octal string')
   return mode
 }
 

@@ -26,18 +26,18 @@ test('close', function (t) {
   })
 })
 
-test('close fd already closed', function (t) {
+test.solo('close fd already closed', function (t) {
   t.plan(4)
 
   const root = createFolder(t)
 
-  fs.open(path.join(root, 'LICENSE'), function (err, fd) {
+  fsnode.open(path.join(root, 'LICENSE'), function (err, fd) {
     t.is(err, null)
 
-    fs.close(fd, function (err) {
+    fsnode.close(fd, function (err) {
       t.is(err, null)
 
-      fs.close(fd, function (err) {
+      fsnode.close(fd, function (err) {
         t.is(err.errno, -9)
         t.is(err.code, 'EBADF')
       })

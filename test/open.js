@@ -39,7 +39,7 @@ test('open with flags', function (t) {
   })
 })
 
-test.solo('open new file with mode', function (t) {
+test('open new file with mode', function (t) {
   t.plan(6)
 
   const root = createFolder(t)

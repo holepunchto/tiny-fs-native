@@ -26,7 +26,7 @@ test('close', function (t) {
   })
 })
 
-test.solo('close fd already closed', function (t) {
+test('close fd already closed', function (t) {
   t.plan(4)
 
   const root = createFolder(t)

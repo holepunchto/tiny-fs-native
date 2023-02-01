@@ -42,11 +42,6 @@ test('read non-existing file', function (t) {
     t.is(err.code, 'ENOENT')
     t.is(data, undefined)
   })
-
-  fsnode.readFile(path.join(root, 'not-exists-two.txt'), function (err, data) {
-    t.comment('fsnode errno: ' + err.errno)
-    t.is(data, undefined)
-  })
 })
 
 test('read file with encoding option', function (t) {
@@ -84,11 +79,6 @@ test('read file but it is a folder', function (t) {
   fs.readFile(path.join(root, 'examples'), { encoding: 'utf-8' }, function (err, data) {
     t.is(err.errno, -21)
     t.is(err.code, 'EISDIR')
-    t.is(data, undefined)
-  })
-
-  fsnode.readFile(path.join(root, 'examples'), { encoding: 'utf-8' }, function (err, data) {
-    t.comment('fsnode errno: ' + err.errno)
     t.is(data, undefined)
   })
 })

@@ -37,7 +37,7 @@ test('open with flags', function (t) {
   })
 })
 
-test('open new file with mode', function (t) {
+test.solo('open new file with mode', function (t) {
   t.plan(6)
 
   const root = createFolder(t)
@@ -46,7 +46,7 @@ test('open new file with mode', function (t) {
     t.is(err, null)
     t.is(typeof fd, 'number')
 
-    t.is(fsnode.fstatSync(fd).mode, 33197) // => 0o655
+    t.is(fs.fstatSync(fd).mode, 33197) // => 0o655
     fsnode.closeSync(fd)
   })
 
@@ -54,7 +54,7 @@ test('open new file with mode', function (t) {
     t.is(err, null)
     t.is(typeof fd, 'number')
 
-    t.is(fsnode.fstatSync(fd).mode, 33261) // => 0o755
+    t.is(fs.fstatSync(fd).mode, 33261) // => 0o755
     fsnode.closeSync(fd)
   })
 })

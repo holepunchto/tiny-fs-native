@@ -61,7 +61,7 @@ test('open new file with mode', function (t) {
   })
 })
 
-test('open with mode as octal string', function (t) {
+test('open new file with mode as octal string', function (t) {
   t.plan(3)
 
   const root = createFolder(t)

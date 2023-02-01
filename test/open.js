@@ -5,6 +5,8 @@ const { createFolder } = require('./helpers')
 const fs = require('../index.js')
 const b4a = require('b4a')
 
+const isWin = process.platform === 'win32'
+
 test('open', function (t) {
   t.plan(2)
 
@@ -46,7 +48,7 @@ test.solo('open new file with mode', function (t) {
     t.is(err, null)
     t.is(typeof fd, 'number')
 
-    t.is(fs.fstatSync(fd).mode, 33197) // => 0o655
+    t.is(fsnode.fstatSync(fd).mode, isWin ? 33206 : 33197) // => 0o655
     fsnode.closeSync(fd)
   })
 
@@ -54,7 +56,7 @@ test.solo('open new file with mode', function (t) {
     t.is(err, null)
     t.is(typeof fd, 'number')
 
-    t.is(fs.fstatSync(fd).mode, 33261) // => 0o755
+    t.is(fsnode.fstatSync(fd).mode, isWin ? 33206 : 33261) // => 0o755
     fsnode.closeSync(fd)
   })
 })
@@ -68,7 +70,7 @@ test('open with mode as octal string', function (t) {
     t.is(err, null)
     t.is(typeof fd, 'number')
 
-    t.is(fsnode.fstatSync(fd).mode, 33261) // => 0o755
+    t.is(fsnode.fstatSync(fd).mode, isWin ? 33206 : 33261) // => 0o755
     fsnode.closeSync(fd)
   })
 })

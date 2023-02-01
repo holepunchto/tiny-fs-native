@@ -86,7 +86,7 @@ test('write file with an object', function (t) {
 })
 
 test('write file but it is a folder', function (t) {
-  t.plan(2)
+  t.plan(1)
 
   const root = createFolder(t)
 

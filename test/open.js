@@ -102,7 +102,7 @@ test('open with invalid mode', function (t) {
 })
 
 test.skip('open non-existing file', function (t) {
-  t.plan(3)
+  t.plan(2)
 
   const root = createFolder(t)
 

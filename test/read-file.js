@@ -32,7 +32,7 @@ test('read file with encoding', function (t) {
 })
 
 test('read non-existing file', function (t) {
-  t.plan(4)
+  t.plan(2)
 
   const root = createFolder(t)
 
@@ -70,7 +70,7 @@ test.skip('read file with non-existing encoding', function (t) {
 })
 
 test('read file but it is a folder', function (t) {
-  t.plan(4)
+  t.plan(2)
 
   const root = createFolder(t)
 

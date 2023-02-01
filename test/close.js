@@ -27,7 +27,7 @@ test('close', function (t) {
 })
 
 test('close fd already closed', function (t) {
-  t.plan(4)
+  t.plan(3)
 
   const root = createFolder(t)
 

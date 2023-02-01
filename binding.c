@@ -28,11 +28,6 @@ typedef struct {
 } tiny_fs_t;
 
 static void
-cleanup (void *arg) {
-  napi_delete_reference((napi_env) arg, on_open);
-}
-
-static void
 on_fs_response (uv_fs_t *req) {
   tiny_fs_t *p = (tiny_fs_t *) req;
 
@@ -96,7 +91,11 @@ on_fs_stat_response (uv_fs_t *req) {
 NAPI_METHOD(tiny_fs_init) {
   NAPI_ARGV(1)
   napi_create_reference(env, argv[0], 1, &on_open);
-  napi_add_env_cleanup_hook(env, cleanup, env);
+  return NULL;
+}
+
+NAPI_METHOD(tiny_fs_destroy) {
+  napi_delete_reference(env, on_open);
   return NULL;
 }
 
@@ -565,6 +564,7 @@ NAPI_INIT() {
   NAPI_EXPORT_OFFSETOF(tiny_fs_t, id)
 
   NAPI_EXPORT_FUNCTION(tiny_fs_init)
+  NAPI_EXPORT_FUNCTION(tiny_fs_destroy)
 
   NAPI_EXPORT_FUNCTION(tiny_fs_open)
   NAPI_EXPORT_FUNCTION(tiny_fs_ftruncate)

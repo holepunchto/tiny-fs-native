@@ -29,6 +29,8 @@ let used = 0
 
 binding.tiny_fs_init(onfsresponse)
 
+process.on('exit', () => binding.tiny_fs_destroy())
+
 // Lightly-modified from the Node FS internal utils.
 function flagsToNumber (flags) {
   switch (flags) {

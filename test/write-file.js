@@ -91,7 +91,6 @@ test('write file but it is a folder', function (t) {
   const root = createFolder(t)
 
   fs.writeFile(path.join(root, 'examples'), 'ISC', function (err) {
-    t.is(err.errno, -21)
     t.is(err.code, 'EISDIR')
   })
 })

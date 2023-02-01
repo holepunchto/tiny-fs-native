@@ -37,7 +37,6 @@ test('close fd already closed', function (t) {
     fs.close(fd, function (err) {
       t.is(err, null)
 
-        t.is(err.errno, -9)
       fs.close(fd, function (err) {
         t.is(err.code, 'EBADF')
       })

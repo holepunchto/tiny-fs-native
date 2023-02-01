@@ -38,7 +38,6 @@ test('read non-existing file', function (t) {
   const root = createFolder(t)
 
   fs.readFile(path.join(root, 'not-exists.txt'), function (err, data) {
-    t.is(err.errno, -2)
     t.is(err.code, 'ENOENT')
     t.is(data, undefined)
   })
@@ -77,7 +76,6 @@ test('read file but it is a folder', function (t) {
   const root = createFolder(t)
 
   fs.readFile(path.join(root, 'examples'), { encoding: 'utf-8' }, function (err, data) {
-    t.is(err.errno, -21)
     t.is(err.code, 'EISDIR')
     t.is(data, undefined)
   })

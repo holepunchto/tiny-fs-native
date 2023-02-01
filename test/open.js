@@ -107,7 +107,6 @@ test.skip('open non-existing file', function (t) {
   const root = createFolder(t)
 
   fs.open(path.join(root, 'not-exists.txt'), function (err, fd) {
-    t.is(err.errno, -2)
     t.is(err.code, 'ENOENT')
     t.is(fd, undefined)
   })

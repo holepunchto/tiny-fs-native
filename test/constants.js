@@ -3,11 +3,11 @@ const fsnode = require('fs')
 const fs = require('../index.js')
 
 test('constants', function (t) {
-  const windowsOnly = ['S_IFBLK', 'S_IFIFO', 'S_IFSOCK']
+  const linuxOnly = ['S_IFBLK', 'S_IFIFO', 'S_IFSOCK']
 
   for (const key in fs.constants) {
-    if (windowsOnly.indexOf(key) > -1) {
-      t.is(fs.constants[key], 0, key + ' is exported (win32 only)')
+    if (process.platform === 'win32' && linuxOnly.indexOf(key) > -1) {
+      t.is(fs.constants[key], 0, key + ' is exported (linux only)')
       continue
     }
 

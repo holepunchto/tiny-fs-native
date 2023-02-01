@@ -31,14 +31,14 @@ test('close fd already closed', function (t) {
 
   const root = createFolder(t)
 
-  fsnode.open(path.join(root, 'LICENSE'), function (err, fd) {
+  fs.open(path.join(root, 'LICENSE'), function (err, fd) {
     t.is(err, null)
 
-    fsnode.close(fd, function (err) {
+    fs.close(fd, function (err) {
       t.is(err, null)
 
-      fsnode.close(fd, function (err) {
         t.is(err.errno, -9)
+      fs.close(fd, function (err) {
         t.is(err.code, 'EBADF')
       })
     })

@@ -8,6 +8,6 @@ add_pear_module(tiny_fs_native)
 
 target_sources(
   tiny_fs_native
-  PUBLIC
+  PRIVATE
     binding.c
 )

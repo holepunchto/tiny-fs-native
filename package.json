@@ -20,7 +20,7 @@
     "url": "https://github.com/holepunchto/tiny-fs-native.git"
   },
   "author": "Mathias Buus (@mafintosh)",
-  "license": "MIT",
+  "license": "Apache-2.0",
   "gypfile": true,
   "bugs": {
     "url": "https://github.com/holepunchto/tiny-fs-native/issues"

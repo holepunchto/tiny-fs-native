@@ -25,5 +25,8 @@
   "bugs": {
     "url": "https://github.com/holepunchto/tiny-fs-native/issues"
   },
-  "homepage": "https://github.com/holepunchto/tiny-fs-native"
+  "homepage": "https://github.com/holepunchto/tiny-fs-native",
+  "addon": {
+    "target": "tiny_fs_native"
+  }
 }
